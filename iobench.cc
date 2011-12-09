@@ -8,11 +8,35 @@
 #include <sys/mman.h>
 #include <stdint.h>
 #include <string.h>
+#include <assert.h>
+#include <map>
 
 using namespace std;
 
 #define N_INTS (1 << 20)
-#define REPS   10
+#define REPS   1
+
+map<string, size_t> iostats() {
+    char buf[4096];
+    int fd;
+    size_t bytes;
+    map<string, size_t> out;
+
+    fd = open("/proc/self/io", O_RDONLY);
+    bytes = read(fd, buf, sizeof buf);
+    close(fd);
+
+    char *p = buf, *e;
+    while (p < buf + bytes) {
+        e = strchr(p, ':');
+        string key(p, e - p);
+        size_t val = strtoul(e + 1, &e, 10);
+        assert(*e == '\n');
+        out[key] = val;
+        p = e + 1;
+    }
+    return out;
+}
 
 uint64_t now() {
     struct timeval tv;
@@ -22,6 +46,7 @@ uint64_t now() {
 
 template <class T>
 void benchmark(const char *name, const char *path) {
+    map<string, size_t> init_stats = iostats();
     uint64_t start = now();
     for (int r = 0; r < REPS; r++)
     {
@@ -32,9 +57,15 @@ void benchmark(const char *name, const char *path) {
         }
     }
     uint64_t end = now();
-    printf("%-20s: %d x read(4) x %d -> %ldms\n",
-           name, REPS, N_INTS, end - start);
+    map<string, size_t> stats = iostats();
 
+    printf("%-20s: %d x read(4) x %d -> %ldms (%d x read(2))\n",
+           name, REPS, N_INTS, end - start,
+           /* -1  for the read() in iostats() */
+           int(stats["syscr"] - init_stats["syscr"] - 1));
+
+
+    init_stats = iostats();
     start = now();
     for (int r = 0; r < REPS; r++)
     {
@@ -43,8 +74,10 @@ void benchmark(const char *name, const char *path) {
         file.read(reinterpret_cast<char*>(vals), sizeof vals);
     }
     end = now();
-    printf("%-20s: %d x read(4 x %d) -> %ldms\n",
-           name, REPS, N_INTS, end - start);
+    stats = iostats();
+    printf("%-20s: %d x read(4 x %d) -> %ldms (%d x read(2))\n",
+           name, REPS, N_INTS, end - start,
+           int(stats["syscr"] - init_stats["syscr"] - 1));
 }
 
 class unix_stream {

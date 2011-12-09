@@ -59,7 +59,7 @@ void benchmark(const char *name, const char *path) {
     uint64_t end = now();
     map<string, size_t> stats = iostats();
 
-    printf("%-20s: %d x read(4) x %d -> %4ldms (%-8d x read(2))\n",
+    printf("%-10s: %d x read(4) x %d -> %4ldms (%-8d x read(2))\n",
            name, REPS, N_INTS, end - start,
            /* -1  for the read() in iostats() */
            int(stats["syscr"] - init_stats["syscr"] - 1));
@@ -75,7 +75,7 @@ void benchmark(const char *name, const char *path) {
     }
     end = now();
     stats = iostats();
-    printf("%-20s: %d x read(4 x %d) -> %4ldms (%-8d x read(2))\n",
+    printf("%-10s: %d x read(4 x %d) -> %4ldms (%-8d x read(2))\n",
            name, REPS, N_INTS, end - start,
            int(stats["syscr"] - init_stats["syscr"] - 1));
 }

@@ -68,7 +68,6 @@ class stdio_stream {
 public:
     stdio_stream(const char *fname) {
         fp_ = fopen(fname, "r");
-        setvbuf(fp_, 0, _IOFBF, 1 << 13);
     }
 
     size_t read(char *buf, size_t bytes) {

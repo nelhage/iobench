@@ -14,7 +14,7 @@
 using namespace std;
 
 #define N_INTS (1 << 20)
-#define REPS   1
+#define REPS   10
 
 map<string, size_t> iostats() {
     char buf[4096];

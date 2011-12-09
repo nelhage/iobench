@@ -89,7 +89,7 @@ public:
         map_len_ = lseek(fd, 0, SEEK_END);
         lseek(fd, 0, 0);
         map_ = mmap(NULL, map_len_, PROT_READ, MAP_SHARED, fd, 0);
-        fp_ = reinterpret_cast<char*>(map_);
+        fp_ = static_cast<char*>(map_);
         close(fd);
     }
 
